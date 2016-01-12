@@ -67,6 +67,12 @@ BOOL CNetServerAdd::SendMessage(CNetClientEx  *petclientex, const void *pvBuf, D
 	{
 		return FALSE;
 	}
+	CNetConsumerModule  *pProviderModule = static_cast<CNetConsumerModule*>(petclientex);
+	if (!pProviderModule)
+	{
+		return FALSE;
+	}
+
 	SNetPacketInfo  sPackInfo;
 	memset(&sPackInfo, 0, sizeof(SNetPacketInfo));
 
@@ -83,10 +89,10 @@ BOOL CNetServerAdd::SendMessage(CNetClientEx  *petclientex, const void *pvBuf, D
 			sPackInfo.m_wIndex++;
 			sPackInfo.m_wLength = wSize;
 			WORD sendsize = sizeof(SNETPACKETINFO) - MAX_SEND_BUFFER + wSize;
-			CNetConsumerModule  *pProviderModule = static_cast<CNetConsumerModule*>(petclientex);
-			if (pProviderModule)
+			if (!pProviderModule->SendMessageTo(&sPackInfo, sendsize))
 			{
-				pProviderModule->SendMessageTo(&sPackInfo, sendsize);
+				rfalse(2, 1, "SendMessage Faile onIndex %d  Send:%d \n", sPackInfo.m_wIndex, sendsize);
+				return FALSE;
 			}
 			break;
 		}
@@ -106,14 +112,10 @@ BOOL CNetServerAdd::SendMessage(CNetClientEx  *petclientex, const void *pvBuf, D
 				sPackInfo.m_wLength = cpylenth;
 
 				WORD sendsize = sizeof(SNETPACKETINFO) - MAX_SEND_BUFFER + cpylenth;
-				CNetConsumerModule  *pProviderModule = static_cast<CNetConsumerModule*>(petclientex);
-				if (pProviderModule)
+				if (!pProviderModule->SendMessageTo(&sPackInfo, sendsize))
 				{
-					if (!pProviderModule->SendMessageTo(&sPackInfo, sendsize))
-					{
-						rfalse(2, 1, "SendMessage Faile  totalsize = %d ", wSize);
-						return FALSE;
-					}
+					rfalse(2, 1, "SendMessage Faile onIndex %d  Send:%d \n", sPackInfo.m_wIndex, sendsize);
+					return FALSE;
 				}
 			}
 			else

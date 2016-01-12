@@ -21,6 +21,12 @@ BOOL CNetProviderAdd::SendMessage(CNetServerEx  *pserverex, DNID dnidClient, con
 	{
 		return FALSE;
 	}
+	CNetProviderModule  *pProviderModule = static_cast<CNetProviderModule*>(pserverex);
+	if (!pProviderModule)
+	{
+		return FALSE;
+	}
+
 	SNetPacketInfo  sPackInfo;
 	memset(&sPackInfo, 0, sizeof(SNetPacketInfo));
 
@@ -37,10 +43,12 @@ BOOL CNetProviderAdd::SendMessage(CNetServerEx  *pserverex, DNID dnidClient, con
 			sPackInfo.m_wIndex++;
 			sPackInfo.m_wLength = wSize;
 			WORD sendsize = sizeof(SNETPACKETINFO) - MAX_SEND_BUFFER + wSize;
-			CNetProviderModule  *pProviderModule = static_cast<CNetProviderModule*>(pserverex);
-			if (pProviderModule)
+			if (!pProviderModule->SendMessageTo(dnidClient, &sPackInfo, sendsize))
 			{
-				pProviderModule->SendMessageTo(dnidClient, &sPackInfo, sendsize);
+				char str[100] = {};
+				sprintf_s(str, 100, "SendMessage Faile onIndex %d  Send:%d \n", sPackInfo.m_wIndex,sendsize);
+				AddInfo(str);
+				return FALSE;
 			}
 			break;
 		}
@@ -60,18 +68,14 @@ BOOL CNetProviderAdd::SendMessage(CNetServerEx  *pserverex, DNID dnidClient, con
 				sPackInfo.m_wLength = cpylenth;
 
 				WORD sendsize = sizeof(SNETPACKETINFO) - MAX_SEND_BUFFER + cpylenth;
-
-				CNetProviderModule  *pProviderModule = static_cast<CNetProviderModule*>(pserverex);
-				if (pProviderModule)
+				if (!pProviderModule->SendMessageTo(dnidClient, &sPackInfo, sendsize))
 				{
-					if (!pProviderModule->SendMessageTo(dnidClient, &sPackInfo, sendsize))
-					{
-						char str[100] = {};
-						sprintf_s(str, 100, "SendMessage Faile %d", wSize);
-						AddInfo(str);
-						return FALSE;
-					}
+					char str[100] = {};
+					sprintf_s(str, 100, "SendMessage Faile onIndex %d  Send:%d \n", sPackInfo.m_wIndex, sendsize);
+					AddInfo(str);
+					return FALSE;
 				}
+				Sleep(100);
 			}
 			else
 			{

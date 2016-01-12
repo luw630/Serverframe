@@ -2094,7 +2094,7 @@ void CFactionManager::GetScriptData(SAGetScriptData *pMsg)
 				lua_pushnil(ls);
 				return;
 			}
-
+			lua_rawseti(ls, -2, 1);
 			if (lua_pcall(ls, 1, 0, 0) != 0)
 			{
 				char err[1024];
